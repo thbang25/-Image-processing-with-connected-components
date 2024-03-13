@@ -1,4 +1,5 @@
 #include "PGMimageProcessor.h"
+#include "ConnectedComponent.h"
 #include <iostream>
 
 using namespace std;
