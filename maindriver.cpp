@@ -1,7 +1,7 @@
 #include "PGMimageProcessor.h"
 
 int main() {
-    PGMimageProcessor processor("mona512.pgm");
+    PGMimageProcessor processor("./data/mona512.pgm");
 
     int componentCount = processor.extractComponents(128, 10);
     std::cout << "Number of components after extraction: " << componentCount << std::endl;
