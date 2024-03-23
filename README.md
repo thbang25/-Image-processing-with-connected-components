@@ -1,6 +1,6 @@
 # -Image-processing-with-connected-components
 
-*ConnectedComponents.cpp*
+***ConnectedComponents.cpp***
 
 Constructor (ConnectedComponent::ConnectedComponent(int x, int y)): Initializes the minX, minY, maxX, and maxY coordinates of the connected component with the given x and y coordinates. The pixels container holds all the coordinates of the pixels that belong to this connected component.
 
@@ -24,7 +24,7 @@ The update method modifies the bounding box coordinates of the connected compone
 
 As for data members, the class contains public data members minX, minY, maxX, and maxY, which represent the bounding box coordinates of the connected component. Additionally, it includes a std::vector<std::pair<int, int>> pixels to store the coordinates of pixels belonging to the connected component.
 
-*PGMimageProcessor*
+***PGMimageProcessor***
 
 Class Definition: The PGMImageProcessor class is defined, which encapsulates functionality related to processing PGM (Portable Gray Map) images.
 Constructor: The class has a constructor PGMImageProcessor(const std::string& filename) which takes the filename of the PGM image to be processed.
