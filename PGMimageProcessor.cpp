@@ -13,89 +13,106 @@ PGMimageProcessor::PGMimageProcessor(const std::string& filename) {
     readPGM(filename);
 }
 
-//we will use extract componets to extract components from the read image
-int PGMimageProcessor::extractComponents(unsigned char threshold, int minValidSize) {
-    extractConnectedComponents(threshold); //determine the connected componets
-    filterComponentsBySize(minValidSize, std::numeric_limits<int>::max()); //filter through components
-    return components.size(); //return the size of the components when done
+// Copy constructor
+PGMimageProcessor::PGMimageProcessor(const PGMimageProcessor& other) :
+    width(other.width), height(other.height), pixels(other.pixels), components(other.components) {}
+
+// Copy assignment operator
+PGMimageProcessor& PGMimageProcessor::operator=(const PGMimageProcessor& other) {
+    if (this != &other) {
+        width = other.width;
+        height = other.height;
+        pixels = other.pixels;
+        components = other.components;
+    }
+    return *this;
 }
 
-//filters through the image data
+// Move constructor
+PGMimageProcessor::PGMimageProcessor(PGMimageProcessor&& other) noexcept :
+    width(std::move(other.width)), height(std::move(other.height)),
+    pixels(std::move(other.pixels)), components(std::move(other.components)) {}
+
+// Move assignment operator
+PGMimageProcessor& PGMimageProcessor::operator=(PGMimageProcessor&& other) noexcept {
+    if (this != &other) {
+        width = std::move(other.width);
+        height = std::move(other.height);
+        pixels = std::move(other.pixels);
+        components = std::move(other.components);
+    }
+    return *this;
+}
+
+// Destructor
+PGMimageProcessor::~PGMimageProcessor() {}
+
+int PGMimageProcessor::extractComponents(unsigned char threshold, int minValidSize) {
+    extractConnectedComponents(threshold);
+    filterComponentsBySize(minValidSize, std::numeric_limits<int>::max());
+    return components.size();
+}
+
 int PGMimageProcessor::filterComponentsBySize(int minSize, int maxSize) {
     components.erase(
         std::remove_if(components.begin(), components.end(), [&](const std::shared_ptr<ConnectedComponent>& component) {
-            int SizeOfComponents = component->pixels.size(); //get the size
-            return SizeOfComponents < minSize || SizeOfComponents > maxSize; //return if the component size indicates valid
+            int sizeOfComponent = component->pixels.size();
+            return sizeOfComponent < minSize || sizeOfComponent > maxSize;
         }),
         components.end()
     );
-    return components.size(); //return the size
+    return components.size();
 }
 
-
-//write the componets to a pgm image
 bool PGMimageProcessor::writeComponents(const std::string& outputImage) {
     std::ofstream ImageData(outputImage, std::ios::binary);
-	//check if the image is opened
     if (!ImageData.is_open()) {
-		//error message
         std::cout << "Error: Unable to open image" << std::endl;
         return false;
     }
-	
-	//write the opening lines
-    ImageData << "P5" << std::endl; //ImageData format
+
+    ImageData << "P5" << std::endl;
     ImageData << "# comments" << std::endl;
     ImageData << width << " " << height << std::endl;
     ImageData << 255 << std::endl;
 
-//create a new desaturated image showing the component data
-    std::vector<std::vector<bool>> fileComponetData(width, std::vector<bool>(height, false));
+    std::vector<std::vector<bool>> fileComponentData(width, std::vector<bool>(height, false));
     for (const auto& component : components) {
         for (const auto& pixel : component->pixels) {
             int x = pixel.first;
             int y = pixel.second;
-            fileComponetData[x][y] = true;
+            fileComponentData[x][y] = true;
         }
     }
 
-//write binary image of focused components to image
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (fileComponetData[x][y]) {
+            if (fileComponentData[x][y]) {
                 ImageData << static_cast<char>(255);
             } else {
                 ImageData << static_cast<char>(0);
             }
         }
     }
-    return true; //end image stream
+    return true;
 }
 
-
-//return the number of components
 int PGMimageProcessor::getComponentCount() const {
     return components.size();
 }
 
-// return number of pixels in largest component
 int PGMimageProcessor::getLargestSize() const {
     int largestSize = 0;
-	//go through the components get the biggest value
     for (const auto& component : components) {
         largestSize = std::max(largestSize, static_cast<int>(component->pixels.size()));
     }
     return largestSize;
 }
 
-// return number of pixels in smallest component
 int PGMimageProcessor::getSmallestSize() const {
-	//if there vector has no data
     if (components.empty()) {
         return 0;
     }
-	
-	//go through the components get the smallest value
     int smallestSize = components[0]->pixels.size();
     for (const auto& component : components) {
         smallestSize = std::min(smallestSize, static_cast<int>(component->pixels.size()));
@@ -103,13 +120,10 @@ int PGMimageProcessor::getSmallestSize() const {
     return smallestSize;
 }
 
-// print the component data
 void PGMimageProcessor::printComponentData(const ConnectedComponent& componentidentity) const {
-	//show the id of the component and the pixels it has
     std::cout << "Component ID: " << &componentidentity << " Number of pixels: " << componentidentity.pixels.size() << std::endl;
 }
 
-//connected components
 const std::vector<std::shared_ptr<ConnectedComponent>>& PGMimageProcessor::getComponents() const {
     return components;
 }
