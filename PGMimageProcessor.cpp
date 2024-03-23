@@ -47,35 +47,43 @@ PGMimageProcessor& PGMimageProcessor::operator=(PGMimageProcessor&& other) noexc
 // Destructor
 PGMimageProcessor::~PGMimageProcessor() {}
 
+
+//we will use extract componets to extract components from the read image
 int PGMimageProcessor::extractComponents(unsigned char threshold, int minValidSize) {
-    extractConnectedComponents(threshold);
-    filterComponentsBySize(minValidSize, std::numeric_limits<int>::max());
-    return components.size();
+    extractConnectedComponents(threshold);//determine the connected componets
+    filterComponentsBySize(minValidSize, std::numeric_limits<int>::max());//filter through components
+    return components.size();//return the size of the components when done
 }
 
+//filters through the image data
 int PGMimageProcessor::filterComponentsBySize(int minSize, int maxSize) {
     components.erase(
         std::remove_if(components.begin(), components.end(), [&](const std::shared_ptr<ConnectedComponent>& component) {
-            int sizeOfComponent = component->pixels.size();
-            return sizeOfComponent < minSize || sizeOfComponent > maxSize;
+            int sizeOfComponent = component->pixels.size();//get the size
+            return sizeOfComponent < minSize || sizeOfComponent > maxSize;//return if the component size indicates valid
         }),
         components.end()
     );
-    return components.size();
+    return components.size(); //return the size of the components
 }
 
+//write the componets to a pgm image
 bool PGMimageProcessor::writeComponents(const std::string& outputImage) {
     std::ofstream ImageData(outputImage, std::ios::binary);
+	//check if the image is opened
     if (!ImageData.is_open()) {
+		//error message
         std::cout << "Error: Unable to open image" << std::endl;
         return false;
     }
 
-    ImageData << "P5" << std::endl;
+//write the opening lines
+    ImageData << "P5" << std::endl; //ImageData format
     ImageData << "# comments" << std::endl;
     ImageData << width << " " << height << std::endl;
     ImageData << 255 << std::endl;
 
+//create a new desaturated image showing the component data
     std::vector<std::vector<bool>> fileComponentData(width, std::vector<bool>(height, false));
     for (const auto& component : components) {
         for (const auto& pixel : component->pixels) {
@@ -85,6 +93,7 @@ bool PGMimageProcessor::writeComponents(const std::string& outputImage) {
         }
     }
 
+//write binary image of focused components to image
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             if (fileComponentData[x][y]) {
@@ -94,25 +103,31 @@ bool PGMimageProcessor::writeComponents(const std::string& outputImage) {
             }
         }
     }
-    return true;
+    return true; //end image stream
 }
 
+//return the number of components
 int PGMimageProcessor::getComponentCount() const {
     return components.size();
 }
 
+// return number of pixels in largest component
 int PGMimageProcessor::getLargestSize() const {
     int largestSize = 0;
+	//go through the components get the biggest value
     for (const auto& component : components) {
         largestSize = std::max(largestSize, static_cast<int>(component->pixels.size()));
     }
     return largestSize;
 }
 
+// return number of pixels in smallest component
 int PGMimageProcessor::getSmallestSize() const {
+	//if there vector has no data
     if (components.empty()) {
         return 0;
     }
+	//go through the components get the smallest value
     int smallestSize = components[0]->pixels.size();
     for (const auto& component : components) {
         smallestSize = std::min(smallestSize, static_cast<int>(component->pixels.size()));
@@ -120,10 +135,12 @@ int PGMimageProcessor::getSmallestSize() const {
     return smallestSize;
 }
 
+// print the component data
 void PGMimageProcessor::printComponentData(const ConnectedComponent& componentidentity) const {
+	//show the id of the component and the pixels it has
     std::cout << "Component ID: " << &componentidentity << " Number of pixels: " << componentidentity.pixels.size() << std::endl;
 }
-
+//connected components
 const std::vector<std::shared_ptr<ConnectedComponent>>& PGMimageProcessor::getComponents() const {
     return components;
 }
@@ -135,6 +152,7 @@ void PGMimageProcessor::readPGM(const std::string& filename) {
     std::string magicNumber;
     getline(ImageData, magicNumber);
     if (magicNumber != "P5") {
+		//show that we expect a PGM file
         std::cout << "Error: Unsupported Image format." << std::endl;
         return;
     }
