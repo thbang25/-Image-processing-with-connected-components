@@ -1,3 +1,8 @@
+/** Thabang  sambo
+ *  23/03/2024
+ *  main program to run and connect compilation files
+ **/
+
 #include "PGMimageProcessor.h"
 
 int main() {
